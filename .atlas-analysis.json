@@ -1,0 +1,61 @@
+{
+  "projectType": "frontend",
+  "projectName": "Animated Profile Slider",
+  "projectDescription": "A Flutter widget for creating animated carousel sliders with smooth transitions and scaling effects.",
+  "theme": "willow",
+  "primaryColor": "#3dcffc",
+  "lightColor": "#0b5b9c",
+  "darkColor": "#ffffff",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "quickstart",
+          "installation"
+        ]
+      },
+      {
+        "group": "Components",
+        "pages": [
+          "components/slice-animated-list",
+          "components/carousel-item",
+          "components/navigation-buttons"
+        ]
+      },
+      {
+        "group": "Guides",
+        "pages": [
+          "guides/customization",
+          "guides/animation-controls",
+          "guides/layout-configuration"
+        ]
+      },
+      {
+        "group": "Examples",
+        "pages": [
+          "examples/basic-usage",
+          "examples/advanced-customization"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Smooth animated carousel with scaling transitions",
+    "Gesture-based navigation with tap selection",
+    "Pulsing navigation button animations",
+    "Configurable item spacing and scaling factors",
+    "Landscape-optimized layout"
+  ],
+  "publicApiSurface": [
+    "SliceAnimatedList - Main carousel widget",
+    "SimpleAnimatedList - Scaffold wrapper",
+    "MyApp - Root application widget",
+    "_itemWidth - Carousel item width constant",
+    "_itemSpacing - Spacing between items",
+    "_maxScale/_minScale - Scale range for items",
+    "_scaleFactor - Distance-based scale reduction",
+    "_animationDuration - Transition timing"
+  ]
+}
