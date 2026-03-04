@@ -1,80 +1,329 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Step-by-step guide to implement the Animated Profile Slider carousel widget
 ---
 
-## Get started in three steps
+Get your Animated Profile Slider up and running in minutes. This guide walks you through creating a fully functional carousel with smooth animations and gesture controls.
 
-Get your documentation site running locally and make your first customization.
+<Steps>
+  <Step title="Create the main application entry point">
+    Set up your `main.dart` file with the root widget and landscape orientation:
 
-### Step 1: Set up your local environment
+    ```dart main.dart
+    import 'package:flutter/material.dart';
+    import 'package:flutter/services.dart';
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    void main() {
+      WidgetsFlutterBinding.ensureInitialized();
+      // Force landscape orientation for better carousel display
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]).then((_) {
+        runApp(const MyApp());
+      });
+    }
 
-### Step 2: Deploy your changes
+    class MyApp extends StatelessWidget {
+      const MyApp({super.key});
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+      @override
+      Widget build(BuildContext context) {
+        return MaterialApp(
+          title: 'Animated Profile Slider',
+          theme: ThemeData(primarySwatch: Colors.blue, brightness: Brightness.dark),
+          home: const SimpleAnimatedList(),
+        );
+      }
+    }
+    ```
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+    <Note>
+      The carousel is optimized for landscape mode to provide the best visual experience.
+    </Note>
+  </Step>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+  <Step title="Create the wrapper widget">
+    Build a simple wrapper that provides the Scaffold structure:
 
-### Step 3: Go live
+    ```dart
+    class SimpleAnimatedList extends StatelessWidget {
+      const SimpleAnimatedList({super.key});
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+      @override
+      Widget build(BuildContext context) {
+        return const Scaffold(body: SliceAnimatedList());
+      }
+    }
+    ```
+  </Step>
 
-## Next steps
+  <Step title="Implement the SliceAnimatedList widget">
+    Create the main carousel widget with essential configuration constants:
 
-Now that you have your docs running, explore these key features:
+    ```dart
+    class SliceAnimatedList extends StatefulWidget {
+      const SliceAnimatedList({super.key});
 
-<CardGroup cols={2}>
+      @override
+      _SliceAnimatedListState createState() => _SliceAnimatedListState();
+    }
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
+    class _SliceAnimatedListState extends State<SliceAnimatedList>
+        with TickerProviderStateMixin {
+      // Layout and animation constants
+      static const double _itemWidth = 150.0;
+      static const double _itemSpacing = 180.0;
+      static const double _maxScale = 1.0;
+      static const double _minScale = 0.3;
+      static const double _scaleFactor = 0.2;
+      static const Duration _animationDuration = Duration(milliseconds: 300);
+      static const Duration _buttonPulseDuration = Duration(milliseconds: 1500);
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
+      // Item data and state
+      final List<int> _items = [];
+      int _counter = 0;
+      int _selectedIndex = 2; // Default selected item (middle of initial 5 items)
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
+      // Button animation controller
+      late AnimationController _buttonAnimationController;
+      late Animation<double> _buttonAnimation;
 
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
+      @override
+      void initState() {
+        super.initState();
+        _populateInitialItems();
+        _initializeButtonAnimation();
+      }
 
-</CardGroup>
+      void _populateInitialItems() {
+        for (int i = 0; i < 5; i++) {
+          _items.add(_counter++);
+        }
+      }
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+      void _initializeButtonAnimation() {
+        _buttonAnimationController = AnimationController(
+          vsync: this,
+          duration: _buttonPulseDuration,
+        )..repeat(reverse: true);
+
+        _buttonAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+          CurvedAnimation(
+            parent: _buttonAnimationController,
+            curve: Curves.easeInOut,
+          ),
+        );
+      }
+
+      @override
+      void dispose() {
+        _buttonAnimationController.dispose();
+        super.dispose();
+      }
+    }
+    ```
+
+    <Tip>
+      Adjust `_itemSpacing` (180.0) to control the gap between carousel items, and `_scaleFactor` (0.2) to change how dramatically items shrink when not selected.
+    </Tip>
+  </Step>
+
+  <Step title="Add navigation methods">
+    Implement methods to handle item selection and navigation:
+
+    ```dart
+    void _selectItem(int index) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+
+    void _selectPreviousItem() {
+      if (_selectedIndex > 0) {
+        _selectItem(_selectedIndex - 1);
+      }
+    }
+
+    void _selectNextItem() {
+      if (_selectedIndex < _items.length - 1) {
+        _selectItem(_selectedIndex + 1);
+      }
+    }
+    ```
+
+    These methods enable smooth transitions between carousel items with boundary checking.
+  </Step>
+
+  <Step title="Build carousel items with animations">
+    Create the carousel item builder with scale and position animations:
+
+    ```dart
+    double _calculateItemScale(int index) {
+      final int distanceFromCenter = (index - _selectedIndex).abs();
+      return (_maxScale - (distanceFromCenter * _scaleFactor)).clamp(
+        _minScale,
+        _maxScale,
+      );
+    }
+
+    Widget _buildCarouselItem(BuildContext context, int index) {
+      final double scale = _calculateItemScale(index);
+      final double offsetX = (index - _selectedIndex) * _itemSpacing;
+
+      TextStyle? textStyle = Theme.of(context).textTheme.headlineMedium;
+      int item = _items[index];
+
+      return AnimatedPositioned(
+        duration: _animationDuration,
+        curve: Curves.easeInOut,
+        left: MediaQuery.of(context).size.width / 2 - _itemWidth / 2 + offsetX,
+        child: GestureDetector(
+          onTap: () => _selectItem(index),
+          child: AnimatedScale(
+            scale: scale,
+            duration: _animationDuration,
+            curve: Curves.easeInOut,
+            child: _buildCardItem(context, item, textStyle, scale),
+          ),
+        ),
+      );
+    }
+
+    Widget _buildCardItem(
+      BuildContext context,
+      int item,
+      TextStyle? textStyle,
+      double scale,
+    ) {
+      return SizedBox(
+        width: _itemWidth,
+        child: Card(
+          color: Colors.primaries[item % Colors.primaries.length],
+          child: Center(child: Text('Item $item', style: textStyle)),
+        ),
+      );
+    }
+    ```
+
+    <Note>
+      The `_buildCarouselItem` method combines `AnimatedPositioned` and `AnimatedScale` to create smooth transitions with a 300ms duration.
+    </Note>
+  </Step>
+
+  <Step title="Add navigation buttons">
+    Create pulsing navigation buttons for better user experience:
+
+    ```dart
+    Widget _buildNavigationButton({
+      required IconData icon,
+      required VoidCallback onPressed,
+      required bool isLeft,
+    }) {
+      return AnimatedBuilder(
+        animation: _buttonAnimationController,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _buttonAnimation.value,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: Icon(icon, color: Colors.white),
+                onPressed: onPressed,
+                iconSize: 30,
+              ),
+            ),
+          );
+        },
+      );
+    }
+    ```
+
+    The navigation buttons pulse with a 1500ms animation cycle to draw user attention.
+  </Step>
+
+  <Step title="Complete the build method">
+    Assemble all components in the final build method:
+
+    ```dart
+    @override
+    Widget build(BuildContext context) {
+      return Column(
+        children: <Widget>[
+          SizedBox(
+            height: 150.0,
+            width: MediaQuery.of(context).size.width,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Generate all carousel items
+                ...List.generate(
+                  _items.length,
+                  (index) => _buildCarouselItem(context, index),
+                ),
+
+                // Left navigation button - only show if not at first item
+                if (_selectedIndex > 0)
+                  Positioned(
+                    left: 20,
+                    child: _buildNavigationButton(
+                      icon: Icons.arrow_back_ios,
+                      onPressed: _selectPreviousItem,
+                      isLeft: true,
+                    ),
+                  ),
+
+                // Right navigation button - only show if not at last item
+                if (_selectedIndex < _items.length - 1)
+                  Positioned(
+                    right: 20,
+                    child: _buildNavigationButton(
+                      icon: Icons.arrow_forward_ios,
+                      onPressed: _selectNextItem,
+                      isLeft: false,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+    ```
+
+    <Tip>
+      Navigation buttons only appear when there are more items to navigate to, providing a clean interface.
+    </Tip>
+  </Step>
+
+  <Step title="Run your application">
+    Launch your app to see the animated carousel in action:
+
+    ```bash
+    flutter run
+    ```
+
+    You should see:
+    - 5 colorful cards in a horizontal carousel
+    - The center card scaled to full size (1.0)
+    - Adjacent cards scaled down based on distance
+    - Smooth 300ms animations on selection
+    - Pulsing navigation buttons
+
+    <Warning>
+      Ensure you have a physical device or emulator configured before running. The carousel works best in landscape orientation.
+    </Warning>
+  </Step>
+</Steps>
+
+## Next Steps
+
+Now that you have the basic carousel working:
+
+- Customize the card design in `_buildCardItem` to display profile images
+- Adjust animation constants to match your app's design language
+- Add more items dynamically to the `_items` list
+- Implement swipe gestures for touch navigation

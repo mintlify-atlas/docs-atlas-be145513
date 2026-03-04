@@ -1,0 +1,428 @@
+---
+title: Navigation Buttons
+description: Animated navigation buttons with pulse effect for carousel control
+---
+
+## Overview
+
+The navigation button component provides left and right controls for the carousel with a subtle pulsing animation effect. Buttons are conditionally displayed based on the current selection position and feature a dark circular background with white icons.
+
+## Implementation
+
+### _buildNavigationButton()
+
+```dart
+Widget _buildNavigationButton({
+  required IconData icon,
+  required VoidCallback onPressed,
+  required bool isLeft,
+}) {
+  return AnimatedBuilder(
+    animation: _buttonAnimationController,
+    builder: (context, child) {
+      return Transform.scale(
+        scale: _buttonAnimation.value,
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.black54,
+            shape: BoxShape.circle,
+          ),
+          child: IconButton(
+            icon: Icon(icon, color: Colors.white),
+            onPressed: onPressed,
+            iconSize: 30,
+          ),
+        ),
+      );
+    },
+  );
+}
+```
+
+Source: `lib/main.dart:180-204`
+
+## Parameters
+
+<ParamField path="icon" type="IconData" required>
+  The icon to display in the button.
+  
+  - Left button: `Icons.arrow_back_ios`
+  - Right button: `Icons.arrow_forward_ios`
+</ParamField>
+
+<ParamField path="onPressed" type="VoidCallback" required>
+  Callback function executed when the button is tapped.
+  
+  - Left button: `_selectPreviousItem`
+  - Right button: `_selectNextItem`
+</ParamField>
+
+<ParamField path="isLeft" type="bool" required>
+  Indicates whether this is the left navigation button.
+  
+  Note: Currently passed but not used in the implementation. Reserved for future directional customization.
+</ParamField>
+
+## Visual Design
+
+<ResponseField name="background" type="BoxDecoration">
+  Circular container with semi-transparent black background.
+  
+  ```dart
+  decoration: const BoxDecoration(
+    color: Colors.black54,
+    shape: BoxShape.circle,
+  )
+  ```
+</ResponseField>
+
+<ResponseField name="iconColor" type="Color" default="Colors.white">
+  White icon for contrast against dark background.
+</ResponseField>
+
+<ResponseField name="iconSize" type="double" default="30">
+  Icon size in logical pixels.
+</ResponseField>
+
+## Animation System
+
+### Animation Controller
+
+The pulse animation is controlled by a dedicated `AnimationController`:
+
+```dart
+late AnimationController _buttonAnimationController;
+late Animation<double> _buttonAnimation;
+```
+
+Source: `lib/main.dart:67-68`
+
+### Animation Initialization
+
+```dart
+void _initializeButtonAnimation() {
+  _buttonAnimationController = AnimationController(
+    vsync: this,
+    duration: _buttonPulseDuration,
+  )..repeat(reverse: true);
+
+  _buttonAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+    CurvedAnimation(
+      parent: _buttonAnimationController,
+      curve: Curves.easeInOut,
+    ),
+  );
+}
+```
+
+Source: `lib/main.dart:88-100`
+
+### Animation Properties
+
+<ResponseField name="duration" type="Duration" default="1500ms">
+  Full cycle duration for the pulse animation.
+  
+  Defined by `_buttonPulseDuration` constant.
+</ResponseField>
+
+<ResponseField name="scaleRange" type="Tween<double>">
+  Scale transformation range from 1.0 to 1.3.
+  
+  - **Minimum**: 1.0 (normal size)
+  - **Maximum**: 1.3 (30% larger)
+</ResponseField>
+
+<ResponseField name="curve" type="Curve" default="Curves.easeInOut">
+  Smooth acceleration and deceleration for natural pulsing effect.
+</ResponseField>
+
+<ResponseField name="repeat" type="bool" default="true">
+  Animation repeats infinitely with reverse mode.
+  
+  Creates continuous breathing effect: 1.0 → 1.3 → 1.0 → 1.3 ...
+</ResponseField>
+
+## AnimatedBuilder Pattern
+
+The button uses `AnimatedBuilder` for efficient animation:
+
+```dart
+AnimatedBuilder(
+  animation: _buttonAnimationController,
+  builder: (context, child) {
+    return Transform.scale(
+      scale: _buttonAnimation.value,
+      child: Container(
+        // ... button content
+      ),
+    );
+  },
+)
+```
+
+<Note>
+  `AnimatedBuilder` only rebuilds the necessary parts of the widget tree, improving performance over rebuilding the entire widget.
+</Note>
+
+## Conditional Rendering
+
+Buttons are conditionally displayed based on carousel position:
+
+### Left Navigation Button
+
+```dart
+if (_selectedIndex > 0)
+  Positioned(
+    left: 20,
+    child: _buildNavigationButton(
+      icon: Icons.arrow_back_ios,
+      onPressed: _selectPreviousItem,
+      isLeft: true,
+    ),
+  ),
+```
+
+Source: `lib/main.dart:223-231`
+
+**Display Condition**: Only shown when `_selectedIndex > 0` (not at first item)
+
+**Position**: 20 pixels from left edge
+
+### Right Navigation Button
+
+```dart
+if (_selectedIndex < _items.length - 1)
+  Positioned(
+    right: 20,
+    child: _buildNavigationButton(
+      icon: Icons.arrow_forward_ios,
+      onPressed: _selectNextItem,
+      isLeft: false,
+    ),
+  ),
+```
+
+Source: `lib/main.dart:234-242`
+
+**Display Condition**: Only shown when `_selectedIndex < _items.length - 1` (not at last item)
+
+**Position**: 20 pixels from right edge
+
+<Tip>
+  Hiding buttons at the list boundaries prevents users from attempting to navigate beyond available items.
+</Tip>
+
+## Navigation Functions
+
+### _selectPreviousItem()
+
+```dart
+void _selectPreviousItem() {
+  if (_selectedIndex > 0) {
+    _selectItem(_selectedIndex - 1);
+  }
+}
+```
+
+Source: `lib/main.dart:116-120`
+
+Decrements the selected index with boundary checking.
+
+### _selectNextItem()
+
+```dart
+void _selectNextItem() {
+  if (_selectedIndex < _items.length - 1) {
+    _selectItem(_selectedIndex + 1);
+  }
+}
+```
+
+Source: `lib/main.dart:123-127`
+
+Increments the selected index with boundary checking.
+
+<Note>
+  Both functions include boundary checks even though the buttons are conditionally rendered, providing defensive programming.
+</Note>
+
+## Lifecycle Management
+
+### Disposal
+
+```dart
+@override
+void dispose() {
+  _buttonAnimationController.dispose();
+  super.dispose();
+}
+```
+
+Source: `lib/main.dart:102-106`
+
+<Note>
+  The animation controller must be disposed to prevent memory leaks. This is called automatically when the widget is removed from the tree.
+</Note>
+
+## Customization Examples
+
+<Accordion title="Change Pulse Speed">
+  Adjust the animation duration for faster or slower pulsing:
+  
+  ```dart
+  static const Duration _buttonPulseDuration = Duration(milliseconds: 1000); // Faster
+  static const Duration _buttonPulseDuration = Duration(milliseconds: 2000); // Slower
+  ```
+</Accordion>
+
+<Accordion title="Adjust Pulse Intensity">
+  Modify the scale range for more or less dramatic effect:
+  
+  ```dart
+  _buttonAnimation = Tween<double>(begin: 1.0, end: 1.5).animate( // Stronger pulse
+    CurvedAnimation(
+      parent: _buttonAnimationController,
+      curve: Curves.easeInOut,
+    ),
+  );
+  ```
+</Accordion>
+
+<Accordion title="Custom Button Style">
+  Customize the button appearance:
+  
+  ```dart
+  Container(
+    decoration: BoxDecoration(
+      color: Colors.blue.withOpacity(0.7),  // Custom color
+      shape: BoxShape.circle,
+      border: Border.all(color: Colors.white, width: 2),  // Add border
+    ),
+    child: IconButton(
+      icon: Icon(icon, color: Colors.white),
+      onPressed: onPressed,
+      iconSize: 36,  // Larger icon
+    ),
+  )
+  ```
+</Accordion>
+
+<Accordion title="Different Animation Curve">
+  Use alternative curves for different effects:
+  
+  ```dart
+  _buttonAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+    CurvedAnimation(
+      parent: _buttonAnimationController,
+      curve: Curves.elasticInOut,  // Bouncy effect
+    ),
+  );
+  ```
+</Accordion>
+
+<Accordion title="Button Positioning">
+  Adjust button positions or alignment:
+  
+  ```dart
+  // Left button - moved further from edge
+  Positioned(
+    left: 50,  // More padding
+    top: 10,   // Vertical offset
+    child: _buildNavigationButton(...),
+  )
+  
+  // Right button - centered vertically
+  Positioned(
+    right: 50,
+    top: 0,
+    bottom: 0,
+    child: Center(
+      child: _buildNavigationButton(...),
+    ),
+  )
+  ```
+</Accordion>
+
+## Advanced Features
+
+<Tabs>
+  <Tab title="Continuous Animation">
+    The pulse animation runs continuously while buttons are visible:
+    
+    - Starts in `initState()`
+    - Runs until widget disposal
+    - Independent of carousel interactions
+    - No performance impact due to efficient `AnimatedBuilder`
+    
+    This creates an always-present visual cue for navigation.
+  </Tab>
+  
+  <Tab title="Transform.scale">
+    Uses `Transform.scale` for GPU-accelerated animation:
+    
+    - Scales from center point
+    - Does not affect layout of surrounding widgets
+    - Smooth performance on all devices
+    - Preserves hit test area
+  </Tab>
+  
+  <Tab title="State Synchronization">
+    Button visibility syncs with carousel state:
+    
+    - Updates on every `setState()` call
+    - Conditional rendering in build method
+    - No additional state tracking needed
+    - Automatic hide/show on navigation
+  </Tab>
+</Tabs>
+
+## Integration with Carousel
+
+Buttons are positioned within the same `Stack` as carousel items:
+
+```dart
+Stack(
+  alignment: Alignment.center,
+  children: [
+    // Carousel items
+    ...List.generate(
+      _items.length,
+      (index) => _buildCarouselItem(context, index),
+    ),
+    
+    // Navigation buttons overlay
+    if (_selectedIndex > 0)
+      Positioned(
+        left: 20,
+        child: _buildNavigationButton(...),
+      ),
+    if (_selectedIndex < _items.length - 1)
+      Positioned(
+        right: 20,
+        child: _buildNavigationButton(...),
+      ),
+  ],
+)
+```
+
+<Tip>
+  Buttons are rendered after carousel items in the `Stack`, ensuring they appear on top and remain clickable.
+</Tip>
+
+## Accessibility Considerations
+
+<Note>
+  The `IconButton` widget provides built-in touch target sizing and ripple effects for better user interaction.
+</Note>
+
+<Tip>
+  Consider adding `Semantics` widgets for screen reader support:
+  
+  ```dart
+  Semantics(
+    label: isLeft ? 'Previous item' : 'Next item',
+    button: true,
+    child: IconButton(...),
+  )
+  ```
+</Tip>

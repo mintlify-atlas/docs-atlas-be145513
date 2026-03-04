@@ -1,0 +1,169 @@
+---
+title: Introduction
+description: A Flutter widget for creating animated carousel sliders with smooth transitions and scaling effects
+mode: custom
+---
+
+<div className="relative bg-gradient-to-br from-[#0b5b9c] via-[#1a7bc4] to-[#3dcffc] py-20 overflow-hidden">
+  <div className="absolute inset-0 bg-black/20"></div>
+  <div className="relative max-w-6xl mx-auto px-6 lg:px-8">
+    <div className="text-center">
+      <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
+        Animated Profile Slider
+      </h1>
+      <p className="text-lg sm:text-xl text-white/90 max-w-3xl mx-auto mb-8">
+        Build stunning animated carousels in Flutter with smooth scaling transitions, gesture navigation, and pulsing controls. Perfect for profile galleries, product showcases, and interactive content displays.
+      </p>
+      <div className="flex flex-wrap justify-center gap-4">
+        <a
+          href="/quickstart"
+          className="inline-flex items-center px-6 py-3 rounded-lg bg-white text-[#0b5b9c] font-semibold hover:bg-gray-100 transition-colors"
+        >
+          Get Started
+        </a>
+        <a
+          href="/components/slice-animated-list"
+          className="inline-flex items-center px-6 py-3 rounded-lg border-2 border-white/40 bg-white/10 text-white font-semibold hover:bg-white/20 transition-colors"
+        >
+          Explore Components
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Key features</h2>
+  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">
+    Everything you need to create beautiful, interactive carousels in your Flutter applications
+  </p>
+  
+  <CardGroup cols={3}>
+    <Card title="Smooth animations" icon="wand-magic-sparkles" href="/guides/animation-controls">
+      Fluid scaling transitions with configurable duration and easing curves for professional-grade animations
+    </Card>
+    <Card title="Gesture navigation" icon="hand-pointer" href="/examples/basic-usage">
+      Tap any item to select it, with automatic centering and scaling to bring focus to your content
+    </Card>
+    <Card title="Pulsing controls" icon="circle-dot" href="/components/navigation-buttons">
+      Eye-catching navigation buttons with built-in pulse animations that guide users through your carousel
+    </Card>
+    <Card title="Configurable layout" icon="sliders" href="/guides/layout-configuration">
+      Adjust item width, spacing, and scale factors to match your design requirements
+    </Card>
+    <Card title="Landscape optimized" icon="mobile-screen" href="/installation">
+      Built for landscape orientation with automatic device orientation locking for optimal viewing
+    </Card>
+    <Card title="Lightweight" icon="feather" href="/components/slice-animated-list">
+      Pure Flutter implementation with no external dependencies beyond the Flutter SDK
+    </Card>
+  </CardGroup>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Quick start</h2>
+  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">
+    Get your animated carousel up and running in minutes
+  </p>
+
+  <Steps>
+    <Step title="Add the widget to your app">
+      Copy the `SliceAnimatedList` widget into your Flutter project's `lib` directory.
+
+      ```dart
+      import 'package:flutter/material.dart';
+      import 'package:your_app/slice_animated_list.dart';
+
+      class MyHomePage extends StatelessWidget {
+        @override
+        Widget build(BuildContext context) {
+          return Scaffold(
+            body: SliceAnimatedList(),
+          );
+        }
+      }
+      ```
+    </Step>
+
+    <Step title="Configure landscape orientation">
+      Set your app to landscape mode in `main.dart` for the best carousel experience.
+
+      ```dart
+      void main() {
+        WidgetsFlutterBinding.ensureInitialized();
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]).then((_) {
+          runApp(const MyApp());
+        });
+      }
+      ```
+    </Step>
+
+    <Step title="Customize your items">
+      Modify the `_buildCardItem` method to display your own content, images, or profile cards.
+
+      ```dart
+      Widget _buildCardItem(BuildContext context, int item, TextStyle? textStyle, double scale) {
+        return SizedBox(
+          width: _itemWidth,
+          child: Card(
+            color: Colors.primaries[item % Colors.primaries.length],
+            child: Center(child: Text('Item $item', style: textStyle)),
+          ),
+        );
+      }
+      ```
+
+      <Tip>Replace the `Text` widget with `CircleAvatar` for profile pictures or `Image.network` for product photos.</Tip>
+    </Step>
+
+    <Step title="Run your app">
+      Launch your Flutter app and interact with the carousel by tapping items or using the navigation buttons.
+
+      ```bash
+      flutter run
+      ```
+    </Step>
+  </Steps>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Explore the documentation</h2>
+  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">
+    Dive deeper into components, customization options, and advanced use cases
+  </p>
+
+  <CardGroup cols={2}>
+    <Card title="Components" icon="cube" href="/components/slice-animated-list">
+      Learn about the core widgets and how they work together to create the carousel experience
+    </Card>
+    <Card title="Customization" icon="palette" href="/guides/customization">
+      Adapt the carousel to your brand with custom colors, sizes, and animation parameters
+    </Card>
+    <Card title="Animation controls" icon="gears" href="/guides/animation-controls">
+      Fine-tune animation timing, easing curves, and transition effects
+    </Card>
+    <Card title="Examples" icon="code" href="/examples/basic-usage">
+      See real-world implementation examples and get inspired for your own projects
+    </Card>
+  </CardGroup>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <div className="rounded-2xl border border-gray-200 dark:border-[#27272a] bg-gray-50 dark:bg-[#1a1d27] p-8 text-center">
+    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+      Ready to build your carousel?
+    </h2>
+    <p className="text-base text-gray-600 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
+      Start with our quickstart guide and have a working animated carousel in your Flutter app within minutes.
+    </p>
+    <a
+      href="/quickstart"
+      className="inline-flex items-center px-6 py-3 rounded-lg bg-[#3dcffc] text-white font-semibold hover:bg-[#2bb8e8] transition-colors"
+    >
+      Get Started Now
+    </a>
+  </div>
+</div>

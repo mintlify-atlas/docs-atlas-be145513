@@ -1,0 +1,545 @@
+---
+title: Layout Configuration
+description: Learn how to configure item layout, spacing, and positioning in the Animated Profile Slider
+---
+
+This guide covers layout configuration including item spacing, positioning calculations, and responsive design considerations.
+
+## Item Spacing
+
+### Horizontal Spacing Between Items
+
+The spacing between carousel items is controlled by the `_itemSpacing` constant:
+
+```dart lib/main.dart:54
+static const double _itemSpacing = 180.0;
+```
+
+This value determines the horizontal distance between item centers:
+
+```dart lib/main.dart:158
+final double offsetX = (index - _selectedIndex) * _itemSpacing;
+```
+
+<Tabs>
+  <Tab title="Tight Spacing">
+    ```dart
+    static const double _itemSpacing = 120.0;
+    ```
+    Items are closer together, creating a more compact carousel. Best when you want to show more items at once.
+  </Tab>
+  <Tab title="Wide Spacing">
+    ```dart
+    static const double _itemSpacing = 250.0;
+    ```
+    Items are further apart, emphasizing the selected item. Best for minimalist designs.
+  </Tab>
+  <Tab title="Default">
+    ```dart
+    static const double _itemSpacing = 180.0;
+    ```
+    Balanced spacing that works well with the default item width of 150.0.
+  </Tab>
+</Tabs>
+
+<Note>
+  The ideal `_itemSpacing` value depends on your `_itemWidth`. A good rule of thumb is to set spacing to 120-150% of the item width for comfortable visual separation.
+</Note>
+
+### Spacing Calculation Formula
+
+The offset for each item is calculated as:
+
+```
+offsetX = (item_index - selected_index) × item_spacing
+```
+
+**Examples with _itemSpacing = 180.0:**
+- Selected item (index 2): (2 - 2) × 180 = 0 (centered)
+- Item to the right (index 3): (3 - 2) × 180 = 180px right
+- Item to the left (index 1): (1 - 2) × 180 = -180px left
+
+### Dynamic Spacing Based on Scale
+
+Create spacing that adapts to item scale:
+
+```dart
+Widget _buildCarouselItem(BuildContext context, int index) {
+  final double scale = _calculateItemScale(index);
+  
+  // Adjust spacing based on scale
+  final double dynamicSpacing = _itemSpacing * (0.8 + (scale * 0.2));
+  final double offsetX = (index - _selectedIndex) * dynamicSpacing;
+
+  TextStyle? textStyle = Theme.of(context).textTheme.headlineMedium;
+  int item = _items[index];
+
+  return AnimatedPositioned(
+    duration: _animationDuration,
+    curve: Curves.easeInOut,
+    left: MediaQuery.of(context).size.width / 2 - _itemWidth / 2 + offsetX,
+    child: GestureDetector(
+      onTap: () => _selectItem(index),
+      child: AnimatedScale(
+        scale: scale,
+        duration: _animationDuration,
+        curve: Curves.easeInOut,
+        child: _buildCardItem(context, item, textStyle, scale),
+      ),
+    ),
+  );
+}
+```
+
+## Position Calculation
+
+### Centering Logic
+
+Items are positioned relative to the screen center:
+
+```dart lib/main.dart:166
+left: MediaQuery.of(context).size.width / 2 - _itemWidth / 2 + offsetX,
+```
+
+This formula:
+1. Finds the screen center: `MediaQuery.of(context).size.width / 2`
+2. Subtracts half the item width: `- _itemWidth / 2` (to center the item)
+3. Adds the offset from the selected position: `+ offsetX`
+
+<Accordion title="Position Calculation Breakdown">
+  For a screen width of 1000px, item width of 150px, and selected index 2:
+
+  **Selected item (index 2):**
+  - offsetX = (2 - 2) × 180 = 0
+  - left = 1000/2 - 150/2 + 0 = 425px
+
+  **Next item (index 3):**
+  - offsetX = (3 - 2) × 180 = 180
+  - left = 1000/2 - 150/2 + 180 = 605px
+
+  **Previous item (index 1):**
+  - offsetX = (1 - 2) × 180 = -180
+  - left = 1000/2 - 150/2 + (-180) = 245px
+</Accordion>
+
+### Vertical Alignment
+
+The stack centers items vertically:
+
+```dart lib/main.dart:213-214
+Stack(
+  alignment: Alignment.center,
+  children: [
+    // ...
+  ],
+)
+```
+
+Customize vertical positioning:
+
+<CodeGroup>
+  ```dart Top Aligned
+  Stack(
+    alignment: Alignment.topCenter,
+    children: [
+      // Items will align to top
+    ],
+  )
+  ```
+
+  ```dart Bottom Aligned
+  Stack(
+    alignment: Alignment.bottomCenter,
+    children: [
+      // Items will align to bottom
+    ],
+  )
+  ```
+
+  ```dart Custom Vertical Offset
+  AnimatedPositioned(
+    duration: _animationDuration,
+    curve: Curves.easeInOut,
+    left: MediaQuery.of(context).size.width / 2 - _itemWidth / 2 + offsetX,
+    top: 30, // Fixed distance from top
+    child: GestureDetector(
+      // ...
+    ),
+  )
+  ```
+</CodeGroup>
+
+## Container Configuration
+
+### Container Dimensions
+
+The carousel is contained within a SizedBox:
+
+```dart lib/main.dart:210-212
+SizedBox(
+  height: 150.0,
+  width: MediaQuery.of(context).size.width,
+  child: Stack(
+    // ...
+  ),
+)
+```
+
+Key considerations:
+
+<Warning>
+  The container height should be at least as tall as your largest scaled item to prevent clipping. With default settings (_maxScale = 1.0, _itemWidth = 150.0), a height of 150.0 works well.
+</Warning>
+
+### Responsive Container
+
+Make the container responsive to screen size:
+
+```dart
+SizedBox(
+  height: MediaQuery.of(context).size.height * 0.25, // 25% of screen height
+  width: MediaQuery.of(context).size.width,
+  child: Stack(
+    alignment: Alignment.center,
+    children: [
+      // ...
+    ],
+  ),
+)
+```
+
+Or use LayoutBuilder for more control:
+
+```dart
+LayoutBuilder(
+  builder: (context, constraints) {
+    return SizedBox(
+      height: constraints.maxWidth > 600 ? 200.0 : 150.0,
+      width: constraints.maxWidth,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // ...
+        ],
+      ),
+    );
+  },
+)
+```
+
+## Navigation Button Positioning
+
+### Button Placement
+
+Buttons are positioned absolutely within the stack:
+
+```dart lib/main.dart:223-231
+if (_selectedIndex > 0)
+  Positioned(
+    left: 20,
+    child: _buildNavigationButton(
+      icon: Icons.arrow_back_ios,
+      onPressed: _selectPreviousItem,
+      isLeft: true,
+    ),
+  ),
+```
+
+```dart lib/main.dart:234-242
+if (_selectedIndex < _items.length - 1)
+  Positioned(
+    right: 20,
+    child: _buildNavigationButton(
+      icon: Icons.arrow_forward_ios,
+      onPressed: _selectNextItem,
+      isLeft: false,
+    ),
+  ),
+```
+
+<Tabs>
+  <Tab title="Edge Positioning">
+    ```dart
+    // Buttons at screen edges
+    Positioned(
+      left: 0,
+      child: _buildNavigationButton(/* ... */),
+    )
+    
+    Positioned(
+      right: 0,
+      child: _buildNavigationButton(/* ... */),
+    )
+    ```
+  </Tab>
+  <Tab title="Inset Positioning">
+    ```dart
+    // Buttons with comfortable margin
+    Positioned(
+      left: 40,
+      child: _buildNavigationButton(/* ... */),
+    )
+    
+    Positioned(
+      right: 40,
+      child: _buildNavigationButton(/* ... */),
+    )
+    ```
+  </Tab>
+  <Tab title="Vertical Offset">
+    ```dart
+    // Buttons positioned lower
+    Positioned(
+      left: 20,
+      bottom: 20, // Distance from bottom
+      child: _buildNavigationButton(/* ... */),
+    )
+    
+    Positioned(
+      right: 20,
+      bottom: 20,
+      child: _buildNavigationButton(/* ... */),
+    )
+    ```
+  </Tab>
+</Tabs>
+
+### Conditional Button Display
+
+Buttons only show when navigation is possible:
+
+```dart lib/main.dart:223
+if (_selectedIndex > 0)
+```
+
+```dart lib/main.dart:234
+if (_selectedIndex < _items.length - 1)
+```
+
+Customize visibility logic:
+
+```dart
+// Always show buttons (disabled state instead)
+Positioned(
+  left: 20,
+  child: _buildNavigationButton(
+    icon: Icons.arrow_back_ios,
+    onPressed: _selectedIndex > 0 ? _selectPreviousItem : null,
+    isLeft: true,
+  ),
+)
+```
+
+## Responsive Layout Patterns
+
+### Screen Size Adaptation
+
+Adjust layout constants based on screen width:
+
+```dart
+class _SliceAnimatedListState extends State<SliceAnimatedList>
+    with TickerProviderStateMixin {
+  // Make constants non-static for dynamic calculation
+  late double _itemWidth;
+  late double _itemSpacing;
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    // Responsive sizing
+    if (screenWidth < 600) {
+      _itemWidth = 100.0;
+      _itemSpacing = 120.0;
+    } else if (screenWidth < 1200) {
+      _itemWidth = 150.0;
+      _itemSpacing = 180.0;
+    } else {
+      _itemWidth = 200.0;
+      _itemSpacing = 240.0;
+    }
+  }
+  
+  // ... rest of implementation
+}
+```
+
+### Orientation Handling
+
+The app forces landscape orientation:
+
+```dart lib/main.dart:9-12
+SystemChrome.setPreferredOrientations([
+  DeviceOrientation.landscapeLeft,
+  DeviceOrientation.landscapeRight,
+])
+```
+
+To support both orientations:
+
+```dart
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Remove orientation lock
+  runApp(const MyApp());
+}
+```
+
+Then adjust layout in the widget:
+
+```dart
+Widget build(BuildContext context) {
+  final orientation = MediaQuery.of(context).orientation;
+  final isLandscape = orientation == Orientation.landscape;
+  
+  return Column(
+    children: <Widget>[
+      SizedBox(
+        height: isLandscape ? 150.0 : 200.0,
+        width: MediaQuery.of(context).size.width,
+        child: Stack(
+          // ...
+        ),
+      ),
+    ],
+  );
+}
+```
+
+<Tip>
+  When supporting both orientations, test your spacing and sizing values in both modes to ensure a good experience.
+</Tip>
+
+## Advanced Layout Techniques
+
+### Circular Layout
+
+Position items in an arc instead of a line:
+
+```dart
+import 'dart:math' as math;
+
+Widget _buildCarouselItem(BuildContext context, int index) {
+  final double scale = _calculateItemScale(index);
+  final int distanceFromCenter = (index - _selectedIndex).abs();
+  
+  // Calculate arc position
+  final double angle = (index - _selectedIndex) * 0.3; // Radians
+  final double radius = 200.0;
+  final double offsetX = radius * math.sin(angle);
+  final double offsetY = radius * (1 - math.cos(angle));
+
+  TextStyle? textStyle = Theme.of(context).textTheme.headlineMedium;
+  int item = _items[index];
+
+  return AnimatedPositioned(
+    duration: _animationDuration,
+    curve: Curves.easeInOut,
+    left: MediaQuery.of(context).size.width / 2 - _itemWidth / 2 + offsetX,
+    top: offsetY,
+    child: GestureDetector(
+      onTap: () => _selectItem(index),
+      child: AnimatedScale(
+        scale: scale,
+        duration: _animationDuration,
+        curve: Curves.easeInOut,
+        child: _buildCardItem(context, item, textStyle, scale),
+      ),
+    ),
+  );
+}
+```
+
+### Perspective Effect
+
+Add 3D perspective to items:
+
+```dart
+import 'dart:math' as math;
+
+Widget _buildCarouselItem(BuildContext context, int index) {
+  final double scale = _calculateItemScale(index);
+  final double offsetX = (index - _selectedIndex) * _itemSpacing;
+  final int distanceFromCenter = (index - _selectedIndex).abs();
+  
+  // Calculate rotation for perspective
+  final double rotationY = (index - _selectedIndex) * 0.3;
+
+  TextStyle? textStyle = Theme.of(context).textTheme.headlineMedium;
+  int item = _items[index];
+
+  return AnimatedPositioned(
+    duration: _animationDuration,
+    curve: Curves.easeInOut,
+    left: MediaQuery.of(context).size.width / 2 - _itemWidth / 2 + offsetX,
+    child: GestureDetector(
+      onTap: () => _selectItem(index),
+      child: Transform(
+        transform: Matrix4.identity()
+          ..setEntry(3, 2, 0.001) // Perspective
+          ..rotateY(rotationY),
+        alignment: Alignment.center,
+        child: AnimatedScale(
+          scale: scale,
+          duration: _animationDuration,
+          curve: Curves.easeInOut,
+          child: _buildCardItem(context, item, textStyle, scale),
+        ),
+      ),
+    ),
+  );
+}
+```
+
+### Overlapping Items
+
+Use z-index control via widget order:
+
+```dart lib/main.dart:217-220
+children: [
+  // Generate all carousel items
+  ...List.generate(
+    _items.length,
+    (index) => _buildCarouselItem(context, index),
+  ),
+```
+
+Reverse order so selected item is on top:
+
+```dart
+children: [
+  // Render in reverse order, selected item last (on top)
+  ...List.generate(
+    _items.length,
+    (index) => _items.length - 1 - index,
+  ).map((index) => _buildCarouselItem(context, index)),
+  
+  // Navigation buttons
+  // ...
+],
+```
+
+Or sort by distance from center:
+
+```dart
+children: [
+  // Items furthest from center rendered first
+  ..._items.asMap().entries
+    .map((entry) => MapEntry(
+      entry.key,
+      (entry.key - _selectedIndex).abs(),
+    ))
+    .toList()
+    ..sort((a, b) => b.value.compareTo(a.value))
+    ..map((entry) => _buildCarouselItem(context, entry.key)),
+  
+  // Navigation buttons always on top
+  // ...
+],
+```
+
+<Note>
+  In Flutter's Stack widget, children are painted in order, so later children appear on top of earlier ones.
+</Note>

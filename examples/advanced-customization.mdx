@@ -1,0 +1,868 @@
+---
+title: Advanced Customization
+description: Advanced examples with custom styling, images, profile data, and modified animations
+---
+
+This guide demonstrates advanced customization techniques for the Animated Profile Slider, including custom styling, profile images, modified animations, and real data integration.
+
+## Custom Profile Cards with Images
+
+Replace the default colored cards with profile cards that display user avatars and information:
+
+<CodeGroup>
+```dart Profile Card Implementation
+class ProfileData {
+  final String name;
+  final String imageUrl;
+  final String role;
+  
+  ProfileData({
+    required this.name,
+    required this.imageUrl,
+    required this.role,
+  });
+}
+
+class CustomSliceAnimatedList extends StatefulWidget {
+  const CustomSliceAnimatedList({super.key});
+
+  @override
+  _CustomSliceAnimatedListState createState() => _CustomSliceAnimatedListState();
+}
+
+class _CustomSliceAnimatedListState extends State<CustomSliceAnimatedList>
+    with TickerProviderStateMixin {
+  
+  final List<ProfileData> _profiles = [
+    ProfileData(
+      name: 'Alice Johnson',
+      imageUrl: 'https://i.pravatar.cc/150?img=1',
+      role: 'Senior Developer',
+    ),
+    ProfileData(
+      name: 'Bob Smith',
+      imageUrl: 'https://i.pravatar.cc/150?img=2',
+      role: 'Product Manager',
+    ),
+    ProfileData(
+      name: 'Carol Williams',
+      imageUrl: 'https://i.pravatar.cc/150?img=3',
+      role: 'UX Designer',
+    ),
+    ProfileData(
+      name: 'David Brown',
+      imageUrl: 'https://i.pravatar.cc/150?img=4',
+      role: 'DevOps Engineer',
+    ),
+    ProfileData(
+      name: 'Emma Davis',
+      imageUrl: 'https://i.pravatar.cc/150?img=5',
+      role: 'Data Scientist',
+    ),
+  ];
+  
+  Widget _buildProfileCard(
+    BuildContext context,
+    ProfileData profile,
+    double scale,
+  ) {
+    return SizedBox(
+      width: 150.0,
+      child: Card(
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: 35,
+                backgroundImage: NetworkImage(profile.imageUrl),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                profile.name,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                profile.role,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+</CodeGroup>
+
+<Note>
+This example uses the `pravatar.cc` service for demo avatars. In production, replace with your actual image URLs or local assets.
+</Note>
+
+## Modified Animation Parameters
+
+Customize animation timing, scales, and spacing for different effects:
+
+<CodeGroup>
+```dart Custom Animation Constants
+class _CustomSliceAnimatedListState extends State<CustomSliceAnimatedList>
+    with TickerProviderStateMixin {
+  
+  // Custom animation and layout parameters
+  static const double _itemWidth = 180.0;           // Wider cards
+  static const double _itemSpacing = 220.0;         // More spacing
+  static const double _maxScale = 1.2;              // Larger selected item
+  static const double _minScale = 0.4;              // Smaller distant items
+  static const double _scaleFactor = 0.15;          // Gentler scale reduction
+  static const Duration _animationDuration = Duration(milliseconds: 450); // Slower animation
+  static const Duration _buttonPulseDuration = Duration(milliseconds: 2000); // Slower pulse
+  
+  int _selectedIndex = 2;
+  late AnimationController _buttonAnimationController;
+  late Animation<double> _buttonAnimation;
+  
+  // ... rest of implementation
+}
+```
+</CodeGroup>
+
+<Tip>
+Experiment with these values to create different visual effects:
+- Increase `_maxScale` for more dramatic selection emphasis
+- Decrease `_scaleFactor` for gentler size transitions
+- Adjust `_itemSpacing` to control carousel density
+- Modify `_animationDuration` for faster or slower transitions
+</Tip>
+
+## Custom Selection Callbacks
+
+Add callbacks to handle item selection events:
+
+<CodeGroup>
+```dart Selection Callbacks
+class CustomSliceAnimatedList extends StatefulWidget {
+  final Function(int index)? onItemSelected;
+  final Function(ProfileData profile)? onProfileTapped;
+  
+  const CustomSliceAnimatedList({
+    super.key,
+    this.onItemSelected,
+    this.onProfileTapped,
+  });
+
+  @override
+  _CustomSliceAnimatedListState createState() => _CustomSliceAnimatedListState();
+}
+
+class _CustomSliceAnimatedListState extends State<CustomSliceAnimatedList>
+    with TickerProviderStateMixin {
+  
+  void _selectItem(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    
+    // Trigger callback when item is selected
+    widget.onItemSelected?.call(index);
+    widget.onProfileTapped?.call(_profiles[index]);
+  }
+  
+  // Use in GestureDetector
+  Widget _buildCarouselItem(BuildContext context, int index) {
+    final double scale = _calculateItemScale(index);
+    final double offsetX = (index - _selectedIndex) * _itemSpacing;
+
+    return AnimatedPositioned(
+      duration: _animationDuration,
+      curve: Curves.easeInOut,
+      left: MediaQuery.of(context).size.width / 2 - _itemWidth / 2 + offsetX,
+      child: GestureDetector(
+        onTap: () => _selectItem(index),
+        child: AnimatedScale(
+          scale: scale,
+          duration: _animationDuration,
+          curve: Curves.easeInOut,
+          child: _buildProfileCard(context, _profiles[index], scale),
+        ),
+      ),
+    );
+  }
+}
+```
+</CodeGroup>
+
+### Usage with Callbacks
+
+<CodeGroup>
+```dart Using Callbacks
+class SimpleAnimatedList extends StatelessWidget {
+  const SimpleAnimatedList({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomSliceAnimatedList(
+        onItemSelected: (index) {
+          print('Selected item at index: $index');
+        },
+        onProfileTapped: (profile) {
+          print('Tapped profile: ${profile.name}');
+          // Navigate to profile detail page
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProfileDetailPage(profile: profile),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+```
+</CodeGroup>
+
+## Custom Animation Curves
+
+Apply different easing curves for unique motion effects:
+
+<CodeGroup>
+```dart Custom Curves
+Widget _buildCarouselItem(BuildContext context, int index) {
+  final double scale = _calculateItemScale(index);
+  final double offsetX = (index - _selectedIndex) * _itemSpacing;
+
+  return AnimatedPositioned(
+    duration: _animationDuration,
+    curve: Curves.elasticOut,  // Bouncy effect
+    left: MediaQuery.of(context).size.width / 2 - _itemWidth / 2 + offsetX,
+    child: GestureDetector(
+      onTap: () => _selectItem(index),
+      child: AnimatedScale(
+        scale: scale,
+        duration: _animationDuration,
+        curve: Curves.easeOutBack,  // Overshoot effect
+        child: _buildProfileCard(context, _profiles[index], scale),
+      ),
+    ),
+  );
+}
+```
+</CodeGroup>
+
+<Info>
+Popular curves to try:
+- `Curves.easeInOut` - Smooth, balanced (default)
+- `Curves.elasticOut` - Bouncy, playful
+- `Curves.easeOutBack` - Slight overshoot
+- `Curves.fastOutSlowIn` - Material Design standard
+- `Curves.decelerate` - Quick start, slow finish
+</Info>
+
+## Integration with Real Data Sources
+
+Fetch and display data from APIs or databases:
+
+<CodeGroup>
+```dart API Integration
+class _CustomSliceAnimatedListState extends State<CustomSliceAnimatedList>
+    with TickerProviderStateMixin {
+  
+  List<ProfileData> _profiles = [];
+  bool _isLoading = true;
+  int _selectedIndex = 0;
+  late AnimationController _buttonAnimationController;
+  late Animation<double> _buttonAnimation;
+  
+  @override
+  void initState() {
+    super.initState();
+    _initializeButtonAnimation();
+    _loadProfiles();
+  }
+  
+  Future<void> _loadProfiles() async {
+    try {
+      // Simulate API call
+      await Future.delayed(const Duration(seconds: 2));
+      
+      // Replace with actual API call:
+      // final response = await http.get(Uri.parse('https://api.example.com/profiles'));
+      // final data = json.decode(response.body);
+      
+      final loadedProfiles = [
+        ProfileData(
+          name: 'Alice Johnson',
+          imageUrl: 'https://i.pravatar.cc/150?img=1',
+          role: 'Senior Developer',
+        ),
+        ProfileData(
+          name: 'Bob Smith',
+          imageUrl: 'https://i.pravatar.cc/150?img=2',
+          role: 'Product Manager',
+        ),
+        // ... more profiles
+      ];
+      
+      setState(() {
+        _profiles = loadedProfiles;
+        _isLoading = false;
+        if (_profiles.isNotEmpty) {
+          _selectedIndex = _profiles.length ~/ 2; // Select middle item
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      // Handle error
+      print('Error loading profiles: $e');
+    }
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+    
+    if (_profiles.isEmpty) {
+      return const Center(
+        child: Text('No profiles available'),
+      );
+    }
+    
+    return Column(
+      children: <Widget>[
+        SizedBox(
+          height: 150.0,
+          width: MediaQuery.of(context).size.width,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              ...List.generate(
+                _profiles.length,
+                (index) => _buildCarouselItem(context, index),
+              ),
+              // Navigation buttons...
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+```
+</CodeGroup>
+
+## Custom Button Styling
+
+Create custom navigation buttons with enhanced styling:
+
+<CodeGroup>
+```dart Custom Navigation Buttons
+Widget _buildNavigationButton({
+  required IconData icon,
+  required VoidCallback onPressed,
+  required bool isLeft,
+}) {
+  return AnimatedBuilder(
+    animation: _buttonAnimationController,
+    builder: (context, child) {
+      return Transform.scale(
+        scale: _buttonAnimation.value,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.blue.shade700,
+                Colors.blue.shade900,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.5),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: IconButton(
+            icon: Icon(icon, color: Colors.white),
+            onPressed: onPressed,
+            iconSize: 32,
+          ),
+        ),
+      );
+    },
+  );
+}
+```
+</CodeGroup>
+
+## Conditional Item Rendering
+
+Render items differently based on selection state:
+
+<CodeGroup>
+```dart Conditional Rendering
+Widget _buildProfileCard(
+  BuildContext context,
+  ProfileData profile,
+  double scale,
+  bool isSelected,
+) {
+  return SizedBox(
+    width: 150.0,
+    child: Card(
+      elevation: isSelected ? 12 : 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: isSelected
+            ? BorderSide(color: Colors.blue, width: 3)
+            : BorderSide.none,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 35,
+              backgroundImage: NetworkImage(profile.imageUrl),
+              child: isSelected
+                  ? Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.blue,
+                          width: 3,
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              profile.name,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? Colors.blue : Colors.white,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              profile.role,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+Widget _buildCarouselItem(BuildContext context, int index) {
+  final double scale = _calculateItemScale(index);
+  final double offsetX = (index - _selectedIndex) * _itemSpacing;
+  final bool isSelected = index == _selectedIndex;
+
+  return AnimatedPositioned(
+    duration: _animationDuration,
+    curve: Curves.easeInOut,
+    left: MediaQuery.of(context).size.width / 2 - _itemWidth / 2 + offsetX,
+    child: GestureDetector(
+      onTap: () => _selectItem(index),
+      child: AnimatedScale(
+        scale: scale,
+        duration: _animationDuration,
+        curve: Curves.easeInOut,
+        child: _buildProfileCard(
+          context,
+          _profiles[index],
+          scale,
+          isSelected,
+        ),
+      ),
+    ),
+  );
+}
+```
+</CodeGroup>
+
+## Complete Advanced Example
+
+Here's a complete implementation combining all advanced features:
+
+<CodeGroup>
+```dart Complete Advanced Implementation
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]).then((_) {
+    runApp(const MyApp());
+  });
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Advanced Profile Slider',
+      theme: ThemeData(primarySwatch: Colors.blue, brightness: Brightness.dark),
+      home: const SimpleAnimatedList(),
+    );
+  }
+}
+
+class SimpleAnimatedList extends StatelessWidget {
+  const SimpleAnimatedList({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomSliceAnimatedList(
+        onProfileTapped: (profile) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Selected: ${profile.name}'),
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class ProfileData {
+  final String name;
+  final String imageUrl;
+  final String role;
+  
+  ProfileData({
+    required this.name,
+    required this.imageUrl,
+    required this.role,
+  });
+}
+
+class CustomSliceAnimatedList extends StatefulWidget {
+  final Function(ProfileData profile)? onProfileTapped;
+  
+  const CustomSliceAnimatedList({super.key, this.onProfileTapped});
+
+  @override
+  _CustomSliceAnimatedListState createState() => _CustomSliceAnimatedListState();
+}
+
+class _CustomSliceAnimatedListState extends State<CustomSliceAnimatedList>
+    with TickerProviderStateMixin {
+  
+  // Custom animation constants
+  static const double _itemWidth = 180.0;
+  static const double _itemSpacing = 220.0;
+  static const double _maxScale = 1.2;
+  static const double _minScale = 0.4;
+  static const double _scaleFactor = 0.15;
+  static const Duration _animationDuration = Duration(milliseconds: 450);
+  static const Duration _buttonPulseDuration = Duration(milliseconds: 2000);
+  
+  final List<ProfileData> _profiles = [
+    ProfileData(
+      name: 'Alice Johnson',
+      imageUrl: 'https://i.pravatar.cc/150?img=1',
+      role: 'Senior Developer',
+    ),
+    ProfileData(
+      name: 'Bob Smith',
+      imageUrl: 'https://i.pravatar.cc/150?img=2',
+      role: 'Product Manager',
+    ),
+    ProfileData(
+      name: 'Carol Williams',
+      imageUrl: 'https://i.pravatar.cc/150?img=3',
+      role: 'UX Designer',
+    ),
+    ProfileData(
+      name: 'David Brown',
+      imageUrl: 'https://i.pravatar.cc/150?img=4',
+      role: 'DevOps Engineer',
+    ),
+    ProfileData(
+      name: 'Emma Davis',
+      imageUrl: 'https://i.pravatar.cc/150?img=5',
+      role: 'Data Scientist',
+    ),
+  ];
+  
+  int _selectedIndex = 2;
+  late AnimationController _buttonAnimationController;
+  late Animation<double> _buttonAnimation;
+  
+  @override
+  void initState() {
+    super.initState();
+    _initializeButtonAnimation();
+  }
+  
+  void _initializeButtonAnimation() {
+    _buttonAnimationController = AnimationController(
+      vsync: this,
+      duration: _buttonPulseDuration,
+    )..repeat(reverse: true);
+
+    _buttonAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+      CurvedAnimation(
+        parent: _buttonAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+  
+  @override
+  void dispose() {
+    _buttonAnimationController.dispose();
+    super.dispose();
+  }
+  
+  void _selectItem(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    widget.onProfileTapped?.call(_profiles[index]);
+  }
+  
+  void _selectPreviousItem() {
+    if (_selectedIndex > 0) {
+      _selectItem(_selectedIndex - 1);
+    }
+  }
+  
+  void _selectNextItem() {
+    if (_selectedIndex < _profiles.length - 1) {
+      _selectItem(_selectedIndex + 1);
+    }
+  }
+  
+  double _calculateItemScale(int index) {
+    final int distanceFromCenter = (index - _selectedIndex).abs();
+    return (_maxScale - (distanceFromCenter * _scaleFactor)).clamp(
+      _minScale,
+      _maxScale,
+    );
+  }
+  
+  Widget _buildProfileCard(
+    BuildContext context,
+    ProfileData profile,
+    bool isSelected,
+  ) {
+    return SizedBox(
+      width: _itemWidth,
+      child: Card(
+        elevation: isSelected ? 12 : 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: isSelected
+              ? const BorderSide(color: Colors.blue, width: 3)
+              : BorderSide.none,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: 35,
+                backgroundImage: NetworkImage(profile.imageUrl),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                profile.name,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? Colors.blue : Colors.white,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                profile.role,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildCarouselItem(BuildContext context, int index) {
+    final double scale = _calculateItemScale(index);
+    final double offsetX = (index - _selectedIndex) * _itemSpacing;
+    final bool isSelected = index == _selectedIndex;
+
+    return AnimatedPositioned(
+      duration: _animationDuration,
+      curve: Curves.easeInOut,
+      left: MediaQuery.of(context).size.width / 2 - _itemWidth / 2 + offsetX,
+      child: GestureDetector(
+        onTap: () => _selectItem(index),
+        child: AnimatedScale(
+          scale: scale,
+          duration: _animationDuration,
+          curve: Curves.easeInOut,
+          child: _buildProfileCard(context, _profiles[index], isSelected),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildNavigationButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required bool isLeft,
+  }) {
+    return AnimatedBuilder(
+      animation: _buttonAnimationController,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _buttonAnimation.value,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.blue.shade700,
+                  Colors.blue.shade900,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withOpacity(0.5),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(icon, color: Colors.white),
+              onPressed: onPressed,
+              iconSize: 32,
+            ),
+          ),
+        );
+      },
+    );
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        SizedBox(
+          height: 200.0,
+          width: MediaQuery.of(context).size.width,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              ...List.generate(
+                _profiles.length,
+                (index) => _buildCarouselItem(context, index),
+              ),
+              if (_selectedIndex > 0)
+                Positioned(
+                  left: 20,
+                  child: _buildNavigationButton(
+                    icon: Icons.arrow_back_ios,
+                    onPressed: _selectPreviousItem,
+                    isLeft: true,
+                  ),
+                ),
+              if (_selectedIndex < _profiles.length - 1)
+                Positioned(
+                  right: 20,
+                  child: _buildNavigationButton(
+                    icon: Icons.arrow_forward_ios,
+                    onPressed: _selectNextItem,
+                    isLeft: false,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+```
+</CodeGroup>
+
+<Tip>
+This complete example demonstrates:
+- Custom profile cards with images
+- Modified animation parameters
+- Selection callbacks
+- Conditional rendering based on selection state
+- Custom styled navigation buttons with gradients
+- All features integrated into a production-ready implementation
+</Tip>
+
+## Next Steps
+
+- Learn about [Animation Controls](/guides/animation-controls) for fine-tuning transitions
+- Explore the [SliceAnimatedList Component](/components/slice-animated-list) for complete API documentation
+- Check [Customization Guide](/guides/customization) for more design techniques

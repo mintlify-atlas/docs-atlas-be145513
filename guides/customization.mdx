@@ -1,0 +1,431 @@
+---
+title: Customization Guide
+description: Learn how to customize colors, sizes, and styling of the Animated Profile Slider widget
+---
+
+This guide shows you how to customize the visual appearance of the Animated Profile Slider, including colors, card styling, and size dimensions.
+
+## Color Customization
+
+### Card Colors
+
+By default, the slider uses Flutter's material color primaries. The colors cycle through based on the item index:
+
+```dart lib/main.dart:140
+Card(
+  color: Colors.primaries[item % Colors.primaries.length],
+  child: Center(child: Text('Item $item', style: textStyle)),
+)
+```
+
+<Tabs>
+  <Tab title="Custom Color List">
+    ```dart
+    Widget _buildCardItem(
+      BuildContext context,
+      int item,
+      TextStyle? textStyle,
+      double scale,
+    ) {
+      // Define your custom color palette
+      final List<Color> customColors = [
+        Color(0xFF6366F1), // Indigo
+        Color(0xFF8B5CF6), // Violet
+        Color(0xFFEC4899), // Pink
+        Color(0xFF10B981), // Emerald
+        Color(0xFFF59E0B), // Amber
+      ];
+
+      return SizedBox(
+        width: _itemWidth,
+        child: Card(
+          color: customColors[item % customColors.length],
+          child: Center(child: Text('Item $item', style: textStyle)),
+        ),
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Gradient Background">
+    ```dart
+    Widget _buildCardItem(
+      BuildContext context,
+      int item,
+      TextStyle? textStyle,
+      double scale,
+    ) {
+      return SizedBox(
+        width: _itemWidth,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.primaries[item % Colors.primaries.length],
+                Colors.primaries[(item + 1) % Colors.primaries.length],
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Card(
+            color: Colors.transparent,
+            elevation: 0,
+            child: Center(child: Text('Item $item', style: textStyle)),
+          ),
+        ),
+      );
+    }
+    ```
+  </Tab>
+  <Tab title="Theme-Based Colors">
+    ```dart
+    Widget _buildCardItem(
+      BuildContext context,
+      int item,
+      TextStyle? textStyle,
+      double scale,
+    ) {
+      return SizedBox(
+        width: _itemWidth,
+        child: Card(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          child: Center(
+            child: Text(
+              'Item $item',
+              style: textStyle?.copyWith(
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Navigation Button Colors
+
+The navigation buttons use a semi-transparent black background with white icons:
+
+```dart lib/main.dart:191-199
+Container(
+  decoration: const BoxDecoration(
+    color: Colors.black54,
+    shape: BoxShape.circle,
+  ),
+  child: IconButton(
+    icon: Icon(icon, color: Colors.white),
+    onPressed: onPressed,
+    iconSize: 30,
+  ),
+)
+```
+
+<CodeGroup>
+  ```dart Solid Color Buttons
+  Container(
+    decoration: BoxDecoration(
+      color: Theme.of(context).primaryColor,
+      shape: BoxShape.circle,
+    ),
+    child: IconButton(
+      icon: Icon(icon, color: Colors.white),
+      onPressed: onPressed,
+      iconSize: 30,
+    ),
+  )
+  ```
+
+  ```dart Gradient Buttons
+  Container(
+    decoration: BoxDecoration(
+      gradient: RadialGradient(
+        colors: [Colors.blue, Colors.purple],
+      ),
+      shape: BoxShape.circle,
+    ),
+    child: IconButton(
+      icon: Icon(icon, color: Colors.white),
+      onPressed: onPressed,
+      iconSize: 30,
+    ),
+  )
+  ```
+
+  ```dart Outlined Buttons
+  Container(
+    decoration: BoxDecoration(
+      border: Border.all(color: Colors.white, width: 2),
+      shape: BoxShape.circle,
+    ),
+    child: IconButton(
+      icon: Icon(icon, color: Colors.white),
+      onPressed: onPressed,
+      iconSize: 30,
+    ),
+  )
+  ```
+</CodeGroup>
+
+<Note>
+  When customizing button colors, ensure sufficient contrast between the background and icon colors for accessibility.
+</Note>
+
+## Size Customization
+
+### Item Dimensions
+
+The default item width is set to 150.0 pixels:
+
+```dart lib/main.dart:53
+static const double _itemWidth = 150.0;
+```
+
+You can modify this constant to make cards wider or narrower:
+
+```dart
+static const double _itemWidth = 200.0; // Larger cards
+static const double _itemWidth = 120.0; // Smaller cards
+```
+
+<Warning>
+  When changing `_itemWidth`, consider also adjusting `_itemSpacing` to maintain proper visual balance between items.
+</Warning>
+
+### Container Height
+
+The carousel container height is defined in the build method:
+
+```dart lib/main.dart:211
+SizedBox(
+  height: 150.0,
+  width: MediaQuery.of(context).size.width,
+  child: Stack(
+    alignment: Alignment.center,
+    children: [
+      // ...
+    ],
+  ),
+)
+```
+
+Adjust the height based on your card size:
+
+```dart
+SizedBox(
+  height: 200.0, // Match or exceed your card height
+  width: MediaQuery.of(context).size.width,
+  // ...
+)
+```
+
+### Button Size
+
+The navigation buttons use an icon size of 30:
+
+```dart lib/main.dart:198
+iconSize: 30,
+```
+
+Customize the button size:
+
+```dart
+IconButton(
+  icon: Icon(icon, color: Colors.white),
+  onPressed: onPressed,
+  iconSize: 40, // Larger buttons
+  padding: EdgeInsets.all(12), // Add more padding
+)
+```
+
+## Card Styling
+
+### Elevation and Shadows
+
+Add depth with elevation:
+
+```dart
+Card(
+  color: Colors.primaries[item % Colors.primaries.length],
+  elevation: 8,
+  shadowColor: Colors.black.withOpacity(0.5),
+  child: Center(child: Text('Item $item', style: textStyle)),
+)
+```
+
+### Border Radius
+
+Customize card shape with custom borders:
+
+```dart
+Card(
+  color: Colors.primaries[item % Colors.primaries.length],
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(20),
+  ),
+  child: Center(child: Text('Item $item', style: textStyle)),
+)
+```
+
+### Borders
+
+Add decorative borders:
+
+```dart
+Card(
+  color: Colors.primaries[item % Colors.primaries.length],
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(12),
+    side: BorderSide(
+      color: Colors.white.withOpacity(0.3),
+      width: 2,
+    ),
+  ),
+  child: Center(child: Text('Item $item', style: textStyle)),
+)
+```
+
+## Text Styling
+
+The default text style uses the theme's headline medium:
+
+```dart lib/main.dart:160
+TextStyle? textStyle = Theme.of(context).textTheme.headlineMedium;
+```
+
+<Accordion title="Custom Text Styles">
+  ```dart
+  Widget _buildCarouselItem(BuildContext context, int index) {
+    final double scale = _calculateItemScale(index);
+    final double offsetX = (index - _selectedIndex) * _itemSpacing;
+    
+    // Custom text style based on selection
+    TextStyle? textStyle = _selectedIndex == index
+        ? TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 1.2,
+          )
+        : TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.normal,
+            color: Colors.white.withOpacity(0.8),
+          );
+    
+    int item = _items[index];
+    
+    return AnimatedPositioned(
+      duration: _animationDuration,
+      curve: Curves.easeInOut,
+      left: MediaQuery.of(context).size.width / 2 - _itemWidth / 2 + offsetX,
+      child: GestureDetector(
+        onTap: () => _selectItem(index),
+        child: AnimatedScale(
+          scale: scale,
+          duration: _animationDuration,
+          curve: Curves.easeInOut,
+          child: _buildCardItem(context, item, textStyle, scale),
+        ),
+      ),
+    );
+  }
+  ```
+</Accordion>
+
+<Tip>
+  Use the `scale` parameter passed to `_buildCardItem` to create scale-dependent styling effects, such as opacity or blur for distant items.
+</Tip>
+
+## Advanced Customization
+
+### Opacity Based on Distance
+
+Make distant items more transparent:
+
+```dart
+Widget _buildCardItem(
+  BuildContext context,
+  int item,
+  TextStyle? textStyle,
+  double scale,
+) {
+  // Calculate opacity based on scale (0.3 to 1.0)
+  final double opacity = ((scale - _minScale) / (_maxScale - _minScale)).clamp(0.3, 1.0);
+  
+  return Opacity(
+    opacity: opacity,
+    child: SizedBox(
+      width: _itemWidth,
+      child: Card(
+        color: Colors.primaries[item % Colors.primaries.length],
+        child: Center(child: Text('Item $item', style: textStyle)),
+      ),
+    ),
+  );
+}
+```
+
+### Blur Effect for Background Items
+
+```dart
+import 'dart:ui';
+
+Widget _buildCardItem(
+  BuildContext context,
+  int item,
+  TextStyle? textStyle,
+  double scale,
+) {
+  final bool isSelected = scale == _maxScale;
+  
+  return ImageFiltered(
+    imageFilter: ImageFilter.blur(
+      sigmaX: isSelected ? 0 : 2,
+      sigmaY: isSelected ? 0 : 2,
+    ),
+    child: SizedBox(
+      width: _itemWidth,
+      child: Card(
+        color: Colors.primaries[item % Colors.primaries.length],
+        child: Center(child: Text('Item $item', style: textStyle)),
+      ),
+    ),
+  );
+}
+```
+
+### Custom Content Layout
+
+Replace simple text with complex layouts:
+
+```dart
+Widget _buildCardItem(
+  BuildContext context,
+  int item,
+  TextStyle? textStyle,
+  double scale,
+) {
+  return SizedBox(
+    width: _itemWidth,
+    child: Card(
+      color: Colors.primaries[item % Colors.primaries.length],
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.person, size: 40, color: Colors.white),
+            SizedBox(height: 8),
+            Text('User $item', style: textStyle?.copyWith(fontSize: 16)),
+            SizedBox(height: 4),
+            Text('Profile', style: TextStyle(fontSize: 12, color: Colors.white70)),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+```

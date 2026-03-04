@@ -1,0 +1,434 @@
+---
+title: Animation Controls
+description: Learn how to control animation timing, curves, and behavior in the Animated Profile Slider
+---
+
+This guide covers all aspects of animation control in the Animated Profile Slider, including timing, curves, and custom animation behaviors.
+
+## Animation Duration
+
+### Main Animation Duration
+
+The carousel uses a 300ms duration for item transitions:
+
+```dart lib/main.dart:58
+static const Duration _animationDuration = Duration(milliseconds: 300);
+```
+
+This duration is used for both position and scale animations:
+
+```dart lib/main.dart:163-174
+AnimatedPositioned(
+  duration: _animationDuration,
+  curve: Curves.easeInOut,
+  left: MediaQuery.of(context).size.width / 2 - _itemWidth / 2 + offsetX,
+  child: GestureDetector(
+    onTap: () => _selectItem(index),
+    child: AnimatedScale(
+      scale: scale,
+      duration: _animationDuration,
+      curve: Curves.easeInOut,
+      child: _buildCardItem(context, item, textStyle, scale),
+    ),
+  ),
+)
+```
+
+<Tabs>
+  <Tab title="Fast Animation">
+    ```dart
+    static const Duration _animationDuration = Duration(milliseconds: 150);
+    ```
+    Creates a snappy, quick transition. Best for small movements or minimalist UIs.
+  </Tab>
+  <Tab title="Slow Animation">
+    ```dart
+    static const Duration _animationDuration = Duration(milliseconds: 600);
+    ```
+    Creates a smooth, deliberate transition. Best for emphasizing the animation or larger movements.
+  </Tab>
+  <Tab title="Default">
+    ```dart
+    static const Duration _animationDuration = Duration(milliseconds: 300);
+    ```
+    Balanced timing that feels responsive without being jarring.
+  </Tab>
+</Tabs>
+
+<Note>
+  The animation duration affects both the position sliding and the scale transformation. Consider how both will look together when choosing a duration.
+</Note>
+
+### Button Pulse Duration
+
+The navigation buttons have a separate pulsing animation:
+
+```dart lib/main.dart:59
+static const Duration _buttonPulseDuration = Duration(milliseconds: 1500);
+```
+
+This creates a breathing effect that repeats continuously:
+
+```dart lib/main.dart:89-99
+_buttonAnimationController = AnimationController(
+  vsync: this,
+  duration: _buttonPulseDuration,
+)..repeat(reverse: true);
+
+_buttonAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+  CurvedAnimation(
+    parent: _buttonAnimationController,
+    curve: Curves.easeInOut,
+  ),
+);
+```
+
+Customize the pulse effect:
+
+```dart
+// Faster pulse
+static const Duration _buttonPulseDuration = Duration(milliseconds: 1000);
+
+// Slower, more subtle pulse
+static const Duration _buttonPulseDuration = Duration(milliseconds: 2500);
+
+// Adjust pulse intensity
+_buttonAnimation = Tween<double>(begin: 1.0, end: 1.5).animate( // More dramatic
+  CurvedAnimation(
+    parent: _buttonAnimationController,
+    curve: Curves.easeInOut,
+  ),
+);
+```
+
+<Tip>
+  To disable the button pulse entirely, remove the `.repeat(reverse: true)` call and set the tween to `begin: 1.0, end: 1.0`.
+</Tip>
+
+## Animation Curves
+
+### Main Transition Curve
+
+Both position and scale animations use `Curves.easeInOut`:
+
+```dart lib/main.dart:165,172
+curve: Curves.easeInOut,
+```
+
+This creates a smooth acceleration and deceleration. Flutter provides many curve options:
+
+<CodeGroup>
+  ```dart Ease In Out (Default)
+  AnimatedPositioned(
+    duration: _animationDuration,
+    curve: Curves.easeInOut,
+    // ...
+  )
+  ```
+
+  ```dart Bouncy
+  AnimatedPositioned(
+    duration: _animationDuration,
+    curve: Curves.bounceOut,
+    // ...
+  )
+  ```
+
+  ```dart Elastic
+  AnimatedPositioned(
+    duration: _animationDuration,
+    curve: Curves.elasticOut,
+    // ...
+  )
+  ```
+
+  ```dart Linear
+  AnimatedPositioned(
+    duration: _animationDuration,
+    curve: Curves.linear,
+    // ...
+  )
+  ```
+
+  ```dart Fast Out Slow In
+  AnimatedPositioned(
+    duration: _animationDuration,
+    curve: Curves.fastOutSlowIn,
+    // ...
+  )
+  ```
+</CodeGroup>
+
+### Different Curves for Position vs Scale
+
+You can use different curves for each animation type:
+
+```dart
+AnimatedPositioned(
+  duration: _animationDuration,
+  curve: Curves.fastOutSlowIn, // Smooth slide
+  left: MediaQuery.of(context).size.width / 2 - _itemWidth / 2 + offsetX,
+  child: GestureDetector(
+    onTap: () => _selectItem(index),
+    child: AnimatedScale(
+      scale: scale,
+      duration: _animationDuration,
+      curve: Curves.easeInOut, // Gentle scale
+      child: _buildCardItem(context, item, textStyle, scale),
+    ),
+  ),
+)
+```
+
+### Button Pulse Curve
+
+The button animation also uses `Curves.easeInOut`:
+
+```dart lib/main.dart:97
+curve: Curves.easeInOut,
+```
+
+Try different curves for different pulse effects:
+
+```dart
+// Smooth breathing effect
+_buttonAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+  CurvedAnimation(
+    parent: _buttonAnimationController,
+    curve: Curves.easeInOutSine,
+  ),
+);
+
+// Quick pulse
+_buttonAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+  CurvedAnimation(
+    parent: _buttonAnimationController,
+    curve: Curves.easeInQuad,
+  ),
+);
+```
+
+<Warning>
+  Avoid using elastic or bounce curves for repeating animations like button pulses, as they can be visually distracting.
+</Warning>
+
+## Scale Animation Behavior
+
+### Scale Calculation
+
+Items scale based on their distance from the selected item:
+
+```dart lib/main.dart:147-153
+double _calculateItemScale(int index) {
+  final int distanceFromCenter = (index - _selectedIndex).abs();
+  return (_maxScale - (distanceFromCenter * _scaleFactor)).clamp(
+    _minScale,
+    _maxScale,
+  );
+}
+```
+
+The scale constants are:
+
+```dart lib/main.dart:55-57
+static const double _maxScale = 1.0;
+static const double _minScale = 0.3;
+static const double _scaleFactor = 0.2;
+```
+
+<Accordion title="Understanding Scale Parameters">
+  - **_maxScale (1.0)**: The scale of the selected item (100% of original size)
+  - **_minScale (0.3)**: The minimum scale for distant items (30% of original size)
+  - **_scaleFactor (0.2)**: How much the scale decreases per item distance
+
+  **Calculation example:**
+  - Selected item (distance 0): 1.0 - (0 × 0.2) = 1.0
+  - Adjacent item (distance 1): 1.0 - (1 × 0.2) = 0.8
+  - Two items away (distance 2): 1.0 - (2 × 0.2) = 0.6
+  - Three items away (distance 3): 1.0 - (3 × 0.2) = 0.4
+  - Four+ items away: clamped to 0.3 (minScale)
+</Accordion>
+
+### Customizing Scale Behavior
+
+<Tabs>
+  <Tab title="Larger Selected Item">
+    ```dart
+    static const double _maxScale = 1.5; // 150% of original size
+    static const double _minScale = 0.3;
+    static const double _scaleFactor = 0.2;
+    ```
+    Makes the selected item stand out more dramatically.
+  </Tab>
+  <Tab title="Subtle Scale Difference">
+    ```dart
+    static const double _maxScale = 1.0;
+    static const double _minScale = 0.7; // Only 30% reduction
+    static const double _scaleFactor = 0.1; // Slower falloff
+    ```
+    Creates a more subtle depth effect.
+  </Tab>
+  <Tab title="Steeper Falloff">
+    ```dart
+    static const double _maxScale = 1.0;
+    static const double _minScale = 0.2;
+    static const double _scaleFactor = 0.3; // Faster reduction
+    ```
+    Makes adjacent items shrink more quickly.
+  </Tab>
+  <Tab title="No Scaling">
+    ```dart
+    static const double _maxScale = 1.0;
+    static const double _minScale = 1.0;
+    static const double _scaleFactor = 0.0;
+    ```
+    Disables scaling entirely, items remain same size.
+  </Tab>
+</Tabs>
+
+### Non-Linear Scale Curves
+
+For more advanced effects, implement custom scale calculations:
+
+```dart
+double _calculateItemScale(int index) {
+  final int distanceFromCenter = (index - _selectedIndex).abs();
+  
+  // Exponential falloff
+  final double exponentialScale = _maxScale * pow(0.8, distanceFromCenter);
+  return exponentialScale.clamp(_minScale, _maxScale);
+}
+```
+
+```dart
+double _calculateItemScale(int index) {
+  final int distanceFromCenter = (index - _selectedIndex).abs();
+  
+  // Only scale immediate neighbors, others stay at minScale
+  if (distanceFromCenter == 0) return _maxScale;
+  if (distanceFromCenter == 1) return 0.7;
+  return _minScale;
+}
+```
+
+## Advanced Animation Techniques
+
+### Staggered Animation
+
+Animate items with a delay based on their position:
+
+```dart
+Widget _buildCarouselItem(BuildContext context, int index) {
+  final double scale = _calculateItemScale(index);
+  final double offsetX = (index - _selectedIndex) * _itemSpacing;
+  final int distanceFromCenter = (index - _selectedIndex).abs();
+  
+  // Add delay based on distance
+  final Duration itemDelay = Duration(
+    milliseconds: distanceFromCenter * 50,
+  );
+
+  TextStyle? textStyle = Theme.of(context).textTheme.headlineMedium;
+  int item = _items[index];
+
+  return AnimatedPositioned(
+    duration: _animationDuration + itemDelay,
+    curve: Curves.easeInOut,
+    left: MediaQuery.of(context).size.width / 2 - _itemWidth / 2 + offsetX,
+    child: GestureDetector(
+      onTap: () => _selectItem(index),
+      child: AnimatedScale(
+        scale: scale,
+        duration: _animationDuration + itemDelay,
+        curve: Curves.easeInOut,
+        child: _buildCardItem(context, item, textStyle, scale),
+      ),
+    ),
+  );
+}
+```
+
+### Custom Animation Controller
+
+Replace implicit animations with explicit controller for more control:
+
+```dart
+class _SliceAnimatedListState extends State<SliceAnimatedList>
+    with TickerProviderStateMixin {
+  // ... existing code ...
+  
+  late AnimationController _carouselAnimationController;
+  late Animation<double> _positionAnimation;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _populateInitialItems();
+    _initializeButtonAnimation();
+    
+    // Initialize carousel animation
+    _carouselAnimationController = AnimationController(
+      vsync: this,
+      duration: _animationDuration,
+    );
+  }
+
+  @override
+  void dispose() {
+    _buttonAnimationController.dispose();
+    _carouselAnimationController.dispose();
+    super.dispose();
+  }
+
+  void _selectItem(int index) {
+    setState(() {
+      _selectedIndex = index;
+      _carouselAnimationController.forward(from: 0);
+    });
+  }
+  
+  // ... rest of implementation
+}
+```
+
+<Note>
+  Using explicit `AnimationController` gives you more control but requires more boilerplate. Stick with implicit animations (`AnimatedPositioned`, `AnimatedScale`) unless you need precise control over animation lifecycle.
+</Note>
+
+### Combining Multiple Animations
+
+Add rotation or other transforms:
+
+```dart
+child: AnimatedScale(
+  scale: scale,
+  duration: _animationDuration,
+  curve: Curves.easeInOut,
+  child: Transform.rotate(
+    angle: (index - _selectedIndex) * 0.05, // Slight rotation
+    child: _buildCardItem(context, item, textStyle, scale),
+  ),
+)
+```
+
+### Disabling Animations
+
+For testing or accessibility purposes:
+
+```dart
+static const Duration _animationDuration = Duration.zero;
+```
+
+Or conditionally disable:
+
+```dart
+final Duration effectiveDuration = MediaQuery.of(context).disableAnimations
+    ? Duration.zero
+    : _animationDuration;
+
+AnimatedPositioned(
+  duration: effectiveDuration,
+  // ...
+)
+```

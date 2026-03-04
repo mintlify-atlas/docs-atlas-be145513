@@ -1,0 +1,307 @@
+---
+title: Basic Usage
+description: Simple implementation example with default settings for the Animated Profile Slider widget
+---
+
+This guide demonstrates the simplest way to integrate the Animated Profile Slider into your Flutter application using default settings.
+
+## Quick Start
+
+The most basic implementation requires three components: the root `MyApp` widget, the `SimpleAnimatedList` wrapper, and the `SliceAnimatedList` carousel component.
+
+<CodeGroup>
+```dart main.dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Force landscape orientation for better carousel display
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]).then((_) {
+    runApp(const MyApp());
+  });
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Animated Profile Slider',
+      theme: ThemeData(primarySwatch: Colors.blue, brightness: Brightness.dark),
+      home: const SimpleAnimatedList(),
+    );
+  }
+}
+
+class SimpleAnimatedList extends StatelessWidget {
+  const SimpleAnimatedList({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: SliceAnimatedList());
+  }
+}
+```
+</CodeGroup>
+
+<Note>
+The widget automatically sets landscape orientation for optimal viewing experience. This is configured in the `main()` function before the app launches.
+</Note>
+
+## Understanding the Default Configuration
+
+The `SliceAnimatedList` component comes with sensible defaults that work out of the box:
+
+<CodeGroup>
+```dart Default Animation Constants
+static const double _itemWidth = 150.0;
+static const double _itemSpacing = 180.0;
+static const double _maxScale = 1.0;
+static const double _minScale = 0.3;
+static const double _scaleFactor = 0.2;
+static const Duration _animationDuration = Duration(milliseconds: 300);
+static const Duration _buttonPulseDuration = Duration(milliseconds: 1500);
+```
+</CodeGroup>
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `_itemWidth` | 150.0 | Width of each carousel item |
+| `_itemSpacing` | 180.0 | Horizontal spacing between items |
+| `_maxScale` | 1.0 | Scale of the selected item |
+| `_minScale` | 0.3 | Minimum scale for distant items |
+| `_scaleFactor` | 0.2 | Scale reduction per item distance |
+| `_animationDuration` | 300ms | Transition animation duration |
+| `_buttonPulseDuration` | 1500ms | Navigation button pulse duration |
+
+## State Management
+
+The widget uses Flutter's built-in `StatefulWidget` with simple state management:
+
+<CodeGroup>
+```dart State Variables
+final List<int> _items = [];
+int _counter = 0;
+int _selectedIndex = 2; // Middle item selected by default
+```
+</CodeGroup>
+
+### Initial Items
+
+By default, the carousel initializes with 5 items, with the middle item (index 2) selected:
+
+<CodeGroup>
+```dart Initialization
+@override
+void initState() {
+  super.initState();
+  // Initialize the carousel with 5 items
+  _populateInitialItems();
+  // Setup button animation controller for pulsing effect
+  _initializeButtonAnimation();
+}
+
+void _populateInitialItems() {
+  for (int i = 0; i < 5; i++) {
+    _items.add(_counter++);
+  }
+}
+```
+</CodeGroup>
+
+## Navigation Controls
+
+The widget includes built-in navigation with animated buttons:
+
+<CodeGroup>
+```dart Navigation Methods
+void _selectPreviousItem() {
+  if (_selectedIndex > 0) {
+    _selectItem(_selectedIndex - 1);
+  }
+}
+
+void _selectNextItem() {
+  if (_selectedIndex < _items.length - 1) {
+    _selectItem(_selectedIndex + 1);
+  }
+}
+
+void _selectItem(int index) {
+  setState(() {
+    _selectedIndex = index;
+  });
+}
+```
+</CodeGroup>
+
+<Tip>
+Navigation buttons only appear when applicable. The left button is hidden at the first item, and the right button is hidden at the last item.
+</Tip>
+
+## Item Interaction
+
+Each carousel item is interactive and can be tapped to select it:
+
+<CodeGroup>
+```dart Interactive Items
+GestureDetector(
+  onTap: () => _selectItem(index),
+  child: AnimatedScale(
+    scale: scale,
+    duration: _animationDuration,
+    curve: Curves.easeInOut,
+    child: _buildCardItem(context, item, textStyle, scale),
+  ),
+)
+```
+</CodeGroup>
+
+## Scale Calculation
+
+Items scale based on their distance from the selected item:
+
+<CodeGroup>
+```dart Scale Logic
+double _calculateItemScale(int index) {
+  final int distanceFromCenter = (index - _selectedIndex).abs();
+  return (_maxScale - (distanceFromCenter * _scaleFactor)).clamp(
+    _minScale,
+    _maxScale,
+  );
+}
+```
+</CodeGroup>
+
+<Info>
+Items further from the center are scaled down progressively. The scale is clamped between `_minScale` (0.3) and `_maxScale` (1.0).
+</Info>
+
+## Default Card Rendering
+
+The basic implementation uses colorful cards with text labels:
+
+<CodeGroup>
+```dart Default Card Item
+Widget _buildCardItem(
+  BuildContext context,
+  int item,
+  TextStyle? textStyle,
+  double scale,
+) {
+  return SizedBox(
+    width: _itemWidth,
+    child: Card(
+      color: Colors.primaries[item % Colors.primaries.length],
+      child: Center(child: Text('Item $item', style: textStyle)),
+    ),
+  );
+}
+```
+</CodeGroup>
+
+## Animation System
+
+The widget uses two types of animations:
+
+### 1. Item Position and Scale Animations
+
+<CodeGroup>
+```dart Item Animation
+AnimatedPositioned(
+  duration: _animationDuration,
+  curve: Curves.easeInOut,
+  left: MediaQuery.of(context).size.width / 2 - _itemWidth / 2 + offsetX,
+  child: ...
+)
+```
+</CodeGroup>
+
+### 2. Button Pulse Animation
+
+<CodeGroup>
+```dart Button Animation Setup
+void _initializeButtonAnimation() {
+  _buttonAnimationController = AnimationController(
+    vsync: this,
+    duration: _buttonPulseDuration,
+  )..repeat(reverse: true);
+
+  _buttonAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+    CurvedAnimation(
+      parent: _buttonAnimationController,
+      curve: Curves.easeInOut,
+    ),
+  );
+}
+```
+</CodeGroup>
+
+<Note>
+Don't forget to dispose of the animation controller to prevent memory leaks:
+```dart
+@override
+void dispose() {
+  _buttonAnimationController.dispose();
+  super.dispose();
+}
+```
+</Note>
+
+## Complete Minimal Example
+
+Here's a complete, copy-paste-ready minimal implementation:
+
+<CodeGroup>
+```dart Complete Example
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]).then((_) {
+    runApp(const MyApp());
+  });
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Animated Profile Slider',
+      theme: ThemeData(primarySwatch: Colors.blue, brightness: Brightness.dark),
+      home: const SimpleAnimatedList(),
+    );
+  }
+}
+
+class SimpleAnimatedList extends StatelessWidget {
+  const SimpleAnimatedList({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: SliceAnimatedList());
+  }
+}
+```
+</CodeGroup>
+
+<Tip>
+This basic setup provides a fully functional animated carousel with navigation controls, smooth transitions, and interactive item selection.
+</Tip>
+
+## Next Steps
+
+- Explore [Advanced Customization](/examples/advanced-customization) to learn how to customize animations, add profile images, and integrate with real data
+- Check the [SliceAnimatedList Component](/components/slice-animated-list) for detailed API documentation
+- Learn about [Animation Controls](/guides/animation-controls) to fine-tune the behavior

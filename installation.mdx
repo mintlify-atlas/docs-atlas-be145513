@@ -1,0 +1,225 @@
+---
+title: Installation
+description: Installation and setup instructions for the Animated Profile Slider widget
+---
+
+The Animated Profile Slider is a pure Flutter widget that requires no external dependencies beyond the Flutter SDK. Follow these steps to integrate it into your project.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Flutter SDK** 3.0.0 or higher
+- **Dart SDK** 2.17.0 or higher
+- A code editor (VS Code, Android Studio, or IntelliJ IDEA)
+
+<Tip>
+  Check your Flutter version with `flutter --version` to ensure compatibility.
+</Tip>
+
+## Create a New Flutter Project
+
+If you're starting fresh, create a new Flutter project:
+
+```bash
+flutter create animated_profile_slider
+cd animated_profile_slider
+```
+
+For existing projects, skip to the next section.
+
+## Add the Widget to Your Project
+
+The Animated Profile Slider uses only Flutter's built-in packages, so no dependencies need to be added to `pubspec.yaml`.
+
+### Required Imports
+
+Add these imports to your `lib/main.dart` file:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+```
+
+<Note>
+  The `flutter/services.dart` import is required to configure device orientation settings.
+</Note>
+
+## Configuration
+
+### Orientation Setup
+
+The carousel is optimized for landscape mode. Configure orientation in your `main()` function:
+
+```dart main.dart
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Force landscape orientation for better carousel display
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]).then((_) {
+    runApp(const MyApp());
+  });
+}
+```
+
+<Warning>
+  Always call `WidgetsFlutterBinding.ensureInitialized()` before using platform channels like `SystemChrome`.
+</Warning>
+
+### Theme Configuration
+
+Set up your app theme in the `MyApp` widget:
+
+```dart
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Animated Profile Slider',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        brightness: Brightness.dark,
+      ),
+      home: const SimpleAnimatedList(),
+    );
+  }
+}
+```
+
+The dark theme provides better contrast for the carousel's colorful cards.
+
+## Widget Structure
+
+The implementation consists of three main widgets:
+
+### 1. MyApp (Root Widget)
+
+Configures the MaterialApp with theme and home screen.
+
+### 2. SimpleAnimatedList (Wrapper Widget)
+
+Provides a Scaffold container for the carousel:
+
+```dart
+class SimpleAnimatedList extends StatelessWidget {
+  const SimpleAnimatedList({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: SliceAnimatedList());
+  }
+}
+```
+
+### 3. SliceAnimatedList (Core Carousel Widget)
+
+The main stateful widget that handles animations, gestures, and rendering.
+
+## Animation Constants
+
+The carousel uses these configurable constants:
+
+<CodeGroup>
+
+```dart Layout Constants
+static const double _itemWidth = 150.0;      // Width of each card
+static const double _itemSpacing = 180.0;    // Horizontal spacing between items
+```
+
+```dart Scale Constants
+static const double _maxScale = 1.0;         // Scale of selected item
+static const double _minScale = 0.3;         // Minimum scale of distant items
+static const double _scaleFactor = 0.2;      // Scale reduction per position
+```
+
+```dart Animation Durations
+static const Duration _animationDuration = Duration(milliseconds: 300);
+static const Duration _buttonPulseDuration = Duration(milliseconds: 1500);
+```
+
+</CodeGroup>
+
+<Tip>
+  These constants are defined in the `_SliceAnimatedListState` class. Adjust them to customize the carousel behavior and appearance.
+</Tip>
+
+## Key Features
+
+The widget includes these built-in features:
+
+- **Smooth Animations**: 300ms transitions using `AnimatedPositioned` and `AnimatedScale`
+- **Gesture Controls**: Tap any card to select it with automatic centering
+- **Navigation Buttons**: Pulsing arrow buttons for sequential navigation
+- **Dynamic Scaling**: Items scale from 0.3 to 1.0 based on distance from center
+- **Boundary Detection**: Navigation buttons hide at list boundaries
+
+## State Management
+
+The widget manages its state through these key variables:
+
+```dart
+final List<int> _items = [];                  // List of carousel items
+int _counter = 0;                              // Counter for generating new items
+int _selectedIndex = 2;                        // Currently selected item index
+late AnimationController _buttonAnimationController;  // Button pulse animation
+late Animation<double> _buttonAnimation;       // Button scale animation
+```
+
+## Core Methods
+
+The carousel functionality is powered by these essential methods:
+
+- **`_selectItem(int index)`** - Updates the selected item and triggers animations
+- **`_selectPreviousItem()`** - Navigates to the previous item with boundary checking
+- **`_selectNextItem()`** - Navigates to the next item with boundary checking
+- **`_buildCarouselItem(BuildContext context, int index)`** - Builds individual carousel items with animations
+- **`_calculateItemScale(int index)`** - Calculates scale based on distance from selected item
+
+## Verify Installation
+
+Run your application to verify everything is set up correctly:
+
+```bash
+flutter run
+```
+
+You should see a horizontal carousel with 5 colored cards, smooth animations, and pulsing navigation buttons.
+
+<Note>
+  The carousel initializes with 5 items by default, with the middle item (index 2) selected.
+</Note>
+
+## Troubleshooting
+
+### App Doesn't Switch to Landscape
+
+- Ensure `WidgetsFlutterBinding.ensureInitialized()` is called before `SystemChrome`
+- Check that orientation is set before `runApp()`
+- Try hot restart instead of hot reload
+
+### Animations Are Jerky
+
+- Verify your device/emulator has hardware acceleration enabled
+- Check that `TickerProviderStateMixin` is added to the state class
+- Ensure `_buttonAnimationController.dispose()` is called in the dispose method
+
+### Cards Don't Scale Properly
+
+- Verify all scale constants are properly defined:
+  - `_maxScale = 1.0`
+  - `_minScale = 0.3`
+  - `_scaleFactor = 0.2`
+- Check that `_calculateItemScale()` is being called correctly
+
+## Next Steps
+
+With installation complete, you're ready to:
+
+- Follow the [Quickstart](/quickstart) guide for a step-by-step implementation walkthrough
+- Customize the carousel appearance and behavior
+- Add your own data models to replace the integer placeholders
+- Integrate profile images and custom card designs
